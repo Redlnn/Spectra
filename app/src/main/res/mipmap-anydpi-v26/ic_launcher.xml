@@ -1,1 +1,1 @@
-<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android"><background android:drawable="@color/spectra_icon_background"/><foreground android:drawable="@drawable/spectra_icon"/><monochrome android:drawable="@drawable/spectra_icon_monochrome"/></adaptive-icon>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android"><background android:drawable="@color/spectra_icon_background"/><foreground android:drawable="@drawable/spectra_launcher_foreground"/><monochrome android:drawable="@drawable/spectra_launcher_monochrome"/></adaptive-icon>

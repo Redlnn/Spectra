@@ -22,6 +22,7 @@ if (!version) throw new Error("Cannot read application version");
 
 const output = path.join(project, "artifacts/icons", version);
 const res = path.join(project, "app/src/main/res");
+const launcherScale = 0.8;
 const background = source.match(/<rect[^>]+fill="([^"]+)"/)?.[1];
 const pathElements = Array.from(source.matchAll(/<path\b([^>]+)\/>/g));
 const paths: IconPath[] = pathElements.map((match) => {
@@ -47,7 +48,7 @@ if (!background || !paths.length || !source.includes('viewBox="0 0 108 108"')) {
   throw new Error("Expected a 108dp icon with a background and vector paths");
 }
 
-function vector(monochrome: boolean): string {
+function vector(monochrome: boolean, scale = 1): string {
   const elements = paths.map((iconPath) => {
     const fill =
       iconPath.fill && iconPath.fill !== "none"
@@ -60,7 +61,12 @@ function vector(monochrome: boolean): string {
       : "";
     return `  <path android:pathData="${iconPath.data}" android:fillColor="${fill}"${stroke}/>`;
   });
-  return `<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">\n${elements.join("\n")}\n</vector>\n`;
+  const content = elements.join("\n");
+  const scaled =
+    scale === 1
+      ? content
+      : `  <group android:pivotX="54" android:pivotY="54" android:scaleX="${scale}" android:scaleY="${scale}">\n${content}\n  </group>`;
+  return `<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">\n${scaled}\n</vector>\n`;
 }
 
 async function main(): Promise<void> {
@@ -74,6 +80,14 @@ async function main(): Promise<void> {
     path.join(res, "drawable/spectra_icon_monochrome.xml"),
     vector(true),
   );
+  fs.writeFileSync(
+    path.join(res, "drawable/spectra_launcher_foreground.xml"),
+    vector(false, launcherScale),
+  );
+  fs.writeFileSync(
+    path.join(res, "drawable/spectra_launcher_monochrome.xml"),
+    vector(true, launcherScale),
+  );
 
   const colors = path.join(res, "values/colors.xml");
   fs.writeFileSync(
@@ -86,12 +100,22 @@ async function main(): Promise<void> {
       ),
   );
   const adaptive =
-    '<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android"><background android:drawable="@color/spectra_icon_background"/><foreground android:drawable="@drawable/spectra_icon"/><monochrome android:drawable="@drawable/spectra_icon_monochrome"/></adaptive-icon>\n';
+    '<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android"><background android:drawable="@color/spectra_icon_background"/><foreground android:drawable="@drawable/spectra_launcher_foreground"/><monochrome android:drawable="@drawable/spectra_launcher_monochrome"/></adaptive-icon>\n';
   for (const name of ["ic_launcher.xml", "ic_launcher_round.xml"]) {
     fs.writeFileSync(path.join(res, "mipmap-anydpi-v26", name), adaptive);
   }
 
   const pathMarkup = pathElements.map((match) => match[0]).join("");
+  const launcherMarkup = `<g transform="translate(54 54) scale(${launcherScale}) translate(-54 -54)">${pathMarkup}</g>`;
+  for (const [name, mask] of Object.entries({
+    circle: '<circle cx="54" cy="54" r="36"/>',
+    rounded: '<rect x="18" y="18" width="72" height="72" rx="22"/>',
+  })) {
+    const preview = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="18 18 72 72"><defs><clipPath id="mask">${mask}</clipPath></defs><g clip-path="url(#mask)"><rect width="108" height="108" fill="${background}"/>${launcherMarkup}</g></svg>`;
+    await sharp(Buffer.from(preview))
+      .png()
+      .toFile(path.join(output, `launcher-${name}.png`));
+  }
   const round = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 108 108"><defs><clipPath id="round"><circle cx="54" cy="54" r="54"/></clipPath></defs><g clip-path="url(#round)"><rect width="108" height="108" fill="${background}"/>${pathMarkup}</g></svg>`;
   const densities = {
     mdpi: 48,
@@ -115,6 +139,8 @@ async function main(): Promise<void> {
   for (const relative of [
     "drawable/spectra_icon.xml",
     "drawable/spectra_icon_monochrome.xml",
+    "drawable/spectra_launcher_foreground.xml",
+    "drawable/spectra_launcher_monochrome.xml",
     "mipmap-anydpi-v26/ic_launcher.xml",
     "mipmap-anydpi-v26/ic_launcher_round.xml",
   ]) {
