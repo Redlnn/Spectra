@@ -1,0 +1,17 @@
+{
+  "name": "spectra-design-tools",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "^22.18.0 || >=23.6.0"
+  },
+  "scripts": {
+    "check": "tsc --noEmit",
+    "generate:icon": "node Generate-AppIcon.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "sharp": "^0.35.5",
+    "typescript": "^6.0.3"
+  }
+}
