@@ -70,7 +70,7 @@ class MicrophoneInput(context: Context, requestedRate: Int) : AudioInput {
             }
             if (opened != null) break
         }
-        record = opened ?: error("无法初始化麦克风；请连接输入设备或使用测试信号")
+        record = opened ?: error("无法初始化麦克风；请连接输入设备或使用信号发生器")
         sampleRate = record.sampleRate
         pcm = ShortArray(32768)
         val session = record.audioSessionId

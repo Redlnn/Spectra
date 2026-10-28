@@ -134,7 +134,7 @@ private fun PitchCard(
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surfaceContainer)
             .then(
-                if (onClick != null) Modifier.clickable(onClickLabel = "编辑测试信号", onClick = onClick)
+                if (onClick != null) Modifier.clickable(onClickLabel = "编辑信号发生器", onClick = onClick)
                 else Modifier
             )
             .padding(12.dp, 8.dp)

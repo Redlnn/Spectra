@@ -32,7 +32,7 @@ internal fun InputSettings(
         SettingToggle("启动时开始分析", s.startOn) { update(s.copy(startOn = it)) }
     }
     SettingsSection("信号发生器") {
-        SettingToggle("播放发生器声音", s.generatorPlayback, "仅在测试信号输入时播放；暂停或离开前台即停止") {
+        SettingToggle("播放声音", s.generatorPlayback, "暂停或离开前台时停止") {
             update(s.copy(generatorPlayback = it))
         }
         SettingChoice("波形", s.shape, WaveShape.entries, label = { it.label }) {

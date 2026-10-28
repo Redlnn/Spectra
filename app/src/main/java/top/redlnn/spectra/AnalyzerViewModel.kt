@@ -14,6 +14,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import top.redlnn.spectra.capture.*
 import top.redlnn.spectra.dsp.*
+import top.redlnn.spectra.noise.NoiseMonitor
 import top.redlnn.spectra.render.SpectrogramHistory
 import top.redlnn.spectra.settings.*
 
@@ -50,6 +51,23 @@ class AnalyzerViewModel(application: Application) : AndroidViewModel(application
     val state = mutableState.asStateFlow()
     private val mutableFrame = MutableStateFlow<AnalysisFrame?>(null)
     val frame = mutableFrame.asStateFlow()
+    private val noiseMonitor = NoiseMonitor(viewModelScope)
+    val noiseReference = noiseMonitor.result
+    private val mutableNoiseMode = MutableStateFlow(false)
+    val noiseMode = mutableNoiseMode.asStateFlow()
+
+    fun setNoiseMode(enabled: Boolean) {
+        if (mutableNoiseMode.value == enabled) return
+        mutableNoiseMode.value = enabled
+        noiseMonitor.configure(enabled)
+    }
+
+    fun restartNoiseObservation() {
+        if (!noiseMode.value || settings.value.input != InputSource.MICROPHONE) return
+        noiseMonitor.reset(generation)
+        if (!state.value.running && !state.value.starting) selectInput(InputSource.MICROPHONE)
+    }
+
     val history = SpectrogramHistory()
     private val mutableHistoryRevision = MutableStateFlow(0L)
     val historyRevision = mutableHistoryRevision.asStateFlow()
@@ -148,7 +166,7 @@ class AnalyzerViewModel(application: Application) : AndroidViewModel(application
     fun foreground(active: Boolean) {
         foreground = active
         if (!initialized) return
-        if (active && wanted) restart() else if (!active) stop("后台已停止输入 · 返回后恢复")
+        if (active && wanted) restart() else if (!active) stop("已暂停 · 返回后恢复")
     }
 
     fun toggle() {
@@ -166,6 +184,7 @@ class AnalyzerViewModel(application: Application) : AndroidViewModel(application
         }
         if (previous.mapping != next.mapping) history.clear()
         if (previous.processingKey() != next.processingKey()) {
+            noiseMonitor.pause()
             generation++
             mutableFrame.value = null
             latestSnapshot = null
@@ -183,7 +202,7 @@ class AnalyzerViewModel(application: Application) : AndroidViewModel(application
 
     fun permissionDenied() {
         wanted = false
-        stop("麦克风权限未授权 · 可使用测试信号", true)
+        stop("麦克风权限未授权 · 可使用信号发生器", true)
     }
 
     fun resetPeaks() {
@@ -206,6 +225,7 @@ class AnalyzerViewModel(application: Application) : AndroidViewModel(application
     }
 
     private fun stop(message: String, error: Boolean = false) {
+        noiseMonitor.pause()
         if (state.value.running)
             latestSnapshot
                 ?.takeIf { it.generation == generation }
@@ -228,6 +248,7 @@ class AnalyzerViewModel(application: Application) : AndroidViewModel(application
 
     private fun restart() {
         val token = ++generation
+        noiseMonitor.reset(token)
         restartRequest?.cancel()
         restartRequest = viewModelScope.launch {
             restartMutex.withLock {
@@ -326,6 +347,14 @@ class AnalyzerViewModel(application: Application) : AndroidViewModel(application
                                     if (input.paced)
                                         origin + total * 1_000_000_000L / input.sampleRate
                                     else input.timestampNs
+                                if (config.input == InputSource.MICROPHONE && generation == token)
+                                    noiseMonitor.submit(
+                                        samples,
+                                        count,
+                                        input.sampleRate,
+                                        token,
+                                        end,
+                                    )
                                 if (input.paced) {
                                     val remaining = end - System.nanoTime()
                                     if (remaining > 0)
@@ -376,6 +405,7 @@ class AnalyzerViewModel(application: Application) : AndroidViewModel(application
                             throw e
                         } catch (e: Exception) {
                             if (isActive) {
+                                noiseMonitor.pause()
                                 wanted = false
                                 mutableState.value =
                                     state.value.copy(

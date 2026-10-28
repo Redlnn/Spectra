@@ -147,15 +147,15 @@ class AnalyzerUiRegressionTest {
         frozenTone()
         compose.onNodeWithText("音高 · YIN").assertDoesNotExist()
         compose.onNodeWithText("离线").assertDoesNotExist()
-        compose.onNodeWithText("测试信号").performClick()
+        compose.onNodeWithText("信号发生器").performClick()
         compose.onNodeWithText("麦克风").assertExists()
         compose.onNodeWithText("成都 · 文件输入").assertDoesNotExist()
-        compose.onNodeWithText("取消").performClick()
+        compose.onNodeWithText("完成").performClick()
         compose.onNodeWithContentDescription("设置").performClick()
         compose.waitForSettingsScreen()
         compose.onNodeWithText("输入", useUnmergedTree = true).performClick()
         compose.onNodeWithText("文件输入说明").assertDoesNotExist()
-        compose.onNodeWithText("播放文件 / 测试信号").assertDoesNotExist()
+        compose.onNodeWithText("播放文件 / 信号发生器").assertDoesNotExist()
         compose.onNodeWithContentDescription("关闭设置").performClick()
     }
 }

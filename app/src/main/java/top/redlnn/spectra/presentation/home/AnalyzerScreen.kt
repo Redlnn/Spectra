@@ -34,6 +34,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import kotlinx.coroutines.*
 import top.redlnn.spectra.AnalyzerViewModel
+import top.redlnn.spectra.NoiseGuideActivity
 import top.redlnn.spectra.SettingsActivity
 import top.redlnn.spectra.export.ExportFormat
 import top.redlnn.spectra.presentation.GeneratorDialog
@@ -74,8 +75,12 @@ private fun AnalyzerContent(
     val state by vm.state.collectAsState()
     val frame by vm.frame.collectAsState()
     val historyRevision by vm.historyRevision.collectAsState()
+    val noiseMode by vm.noiseMode.collectAsState()
+    val noiseReference by vm.noiseReference.collectAsState()
     val context = LocalContext.current
     var inputOpen by remember { mutableStateOf(false) }
+    var noiseDetailsOpen by remember { mutableStateOf(false) }
+    val noiseActive = noiseMode && s.input == InputSource.MICROPHONE
     var exportsOpen by remember { mutableStateOf(false) }
     var chart by remember { mutableStateOf<AnalyzerChartView?>(null) }
     var fullscreen by rememberSaveable { mutableStateOf(false) }
@@ -234,7 +239,21 @@ private fun AnalyzerContent(
                                         fontSize = 11.sp,
                                     )
                             }
-                            if (compactLandscape && s.pitch)
+                            if (compactLandscape && noiseActive)
+                                Text(
+                                    "寻源 · ${noiseReference.observation} ›",
+                                    modifier =
+                                        Modifier.widthIn(max = 220.dp)
+                                            .padding(end = 12.dp)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .clickable { noiseDetailsOpen = true }
+                                            .testTag("noise-reference-summary"),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = Accent,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            else if (compactLandscape && s.pitch)
                                 Text(
                                     frame?.pitch?.note(s.flats) ?: "—",
                                     modifier =
@@ -276,14 +295,26 @@ private fun AnalyzerContent(
                             )
                         }
                     }
-                    if (!compact)
-                        AnalyzerMetrics(
-                            s,
-                            frame,
-                            { vm.update(s.copy(levelPositiveDb = !s.levelPositiveDb)) },
-                        ) {
-                            generatorOpen = true
-                        }
+                    if (!compactLandscape) {
+                        if (noiseActive)
+                            NoiseReferenceCard(
+                                noiseReference,
+                                state.running,
+                                vm::restartNoiseObservation,
+                            ) {
+                                context.startActivity(
+                                    Intent(context, NoiseGuideActivity::class.java)
+                                )
+                            }
+                        else if (!compact)
+                            AnalyzerMetrics(
+                                s,
+                                frame,
+                                { vm.update(s.copy(levelPositiveDb = !s.levelPositiveDb)) },
+                            ) {
+                                generatorOpen = true
+                            }
+                    }
                     Row(
                         Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -437,7 +468,7 @@ private fun AnalyzerContent(
                             color = MaterialTheme.colorScheme.error,
                             modifier = Modifier.weight(1f),
                         )
-                        TextButton(onClick = { onInput(InputSource.GENERATOR) }) { Text("使用测试信号") }
+                        TextButton(onClick = { onInput(InputSource.GENERATOR) }) { Text("使用信号发生器") }
                     }
             }
             if (fullscreen)
@@ -460,8 +491,8 @@ private fun AnalyzerContent(
             onDismissRequest = { inputOpen = false },
             title = { Text("选择音频输入") },
             text = {
-                Column {
-                    InputSource.entries.forEach { source ->
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    listOf(InputSource.GENERATOR, InputSource.MICROPHONE).forEach { source ->
                         ListItem(
                             headlineContent = { Text(source.label) },
                             supportingContent = {
@@ -477,16 +508,54 @@ private fun AnalyzerContent(
                                     Icon(Icons.Rounded.Check, "已选", tint = Accent)
                             },
                             modifier =
-                                Modifier.clickable {
-                                    inputOpen = false
-                                    onInput(source)
+                                Modifier.testTag("input-option-${source.name}").clickable {
+                                    inputOpen = source == InputSource.MICROPHONE
+                                    if (s.input != source) onInput(source)
                                 },
                             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                         )
+                        if (source == InputSource.MICROPHONE)
+                            Row(
+                                Modifier.fillMaxWidth().padding(start = 28.dp, end = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                Column(Modifier.weight(1f)) {
+                                    Text("噪声寻源", style = MaterialTheme.typography.bodyLarge)
+                                    Text(
+                                        if (s.input == InputSource.MICROPHONE) "根据声音特征提供来源参考"
+                                        else "仅麦克风输入可用",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Muted,
+                                    )
+                                }
+                                Switch(
+                                    checked = noiseActive,
+                                    onCheckedChange = {
+                                        vm.setNoiseMode(it)
+                                        inputOpen = false
+                                    },
+                                    enabled = s.input == InputSource.MICROPHONE,
+                                    modifier = Modifier.testTag("noise-reference-switch"),
+                                )
+                            }
                     }
                 }
             },
-            confirmButton = { TextButton(onClick = { inputOpen = false }) { Text("取消") } },
+            confirmButton = { TextButton(onClick = { inputOpen = false }) { Text("完成") } },
+        )
+    if (noiseDetailsOpen && noiseActive)
+        AlertDialog(
+            onDismissRequest = { noiseDetailsOpen = false },
+            modifier = Modifier.testTag("noise-reference-dialog"),
+            title = { Text("噪声寻源") },
+            text = {
+                NoiseReferenceCard(noiseReference, state.running, vm::restartNoiseObservation) {
+                    noiseDetailsOpen = false
+                    context.startActivity(Intent(context, NoiseGuideActivity::class.java))
+                }
+            },
+            confirmButton = { TextButton(onClick = { noiseDetailsOpen = false }) { Text("关闭") } },
         )
 }
 

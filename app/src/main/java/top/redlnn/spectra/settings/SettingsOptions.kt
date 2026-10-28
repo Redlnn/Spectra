@@ -12,7 +12,7 @@ internal object SettingsChoices {
 
 enum class InputSource(val label: String) {
     MICROPHONE("麦克风"),
-    GENERATOR("测试信号"),
+    GENERATOR("信号发生器"),
 }
 
 enum class WindowType(val label: String) {

@@ -27,7 +27,7 @@ fun GeneratorDialog(
     val valid = hz != null && hz.isFinite() && hz in 20.0..20000.0
     AlertDialog(
         onDismissRequest = onClose,
-        title = { Text("测试信号") },
+        title = { Text("信号发生器") },
         text = {
             Column(
                 Modifier.verticalScroll(rememberScrollState()),
