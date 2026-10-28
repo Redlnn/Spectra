@@ -204,16 +204,26 @@ internal fun SettingSlider(
 ) {
     var pending by remember(value) { mutableFloatStateOf(value) }
     var inputOpen by remember { mutableStateOf(false) }
-    Column(Modifier.padding(16.dp, 12.dp)) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+    Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Row(
+            Modifier.fillMaxWidth().heightIn(min = 48.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Text(title, Modifier.weight(1f), fontSize = 14.sp)
             Spacer(Modifier.width(8.dp))
             TextButton(
                 onClick = { inputOpen = true },
-                modifier = Modifier.testTag("slider-preview-$title"),
-                contentPadding = PaddingValues(horizontal = 6.dp),
+                modifier =
+                    Modifier.defaultMinSize(minWidth = 1.dp, minHeight = 32.dp)
+                        .testTag("slider-preview-$title"),
+                shape = RoundedCornerShape(50),
+                colors =
+                    ButtonDefaults.textButtonColors(
+                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = .1f)
+                    ),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
             ) {
-                Text(label(pending), fontSize = 12.sp)
+                Text(label(pending), fontSize = 12.sp, fontWeight = FontWeight.Medium)
             }
         }
         if (LocalSettingsMiuix.current)
@@ -223,7 +233,7 @@ internal fun SettingSlider(
                 valueRange = range,
                 steps = steps,
                 onValueChangeFinished = { onChange(pending) },
-                modifier = Modifier.fillMaxWidth().padding(top = 10.dp).testTag("slider-$title"),
+                modifier = Modifier.fillMaxWidth().padding(top = 4.dp).testTag("slider-$title"),
             )
         else
             Slider(
