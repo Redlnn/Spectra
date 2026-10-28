@@ -15,6 +15,7 @@ internal fun ToolSettings(
     state: AnalyzerState,
     vm: AnalyzerViewModel,
     onAbout: () -> Unit,
+    onNoiseGuide: () -> Unit,
 ) {
     val defaults = AnalyzerSettings()
     SettingsSection("设置与性能") {
@@ -41,6 +42,7 @@ internal fun ToolSettings(
         SettingInfo("幅值参考", "点击主页输入电平可在 dBFS 与 dB（+100）之间切换。dB 为数字满刻度读数加 100 的显示偏移，不是校准声压级 dB SPL。")
     }
     SettingsSection {
+        SettingAction("噪音寻源指南", "频率特征、声音规律与排查方法", onClick = onNoiseGuide)
         SettingAction(
             "关于",
             "${stringResource(R.string.app_name)} ${BuildConfig.VERSION_NAME}",

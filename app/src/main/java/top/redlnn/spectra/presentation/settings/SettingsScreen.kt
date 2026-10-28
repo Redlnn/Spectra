@@ -22,6 +22,7 @@ fun SettingsScreen(
     onClose: () -> Unit,
     onInput: (InputSource) -> Unit,
     onAbout: () -> Unit,
+    onNoiseGuide: () -> Unit,
 ) {
     val settings by vm.settings.collectAsState()
     val state by vm.state.collectAsState()
@@ -75,7 +76,7 @@ fun SettingsScreen(
                                 )
                             2 -> ChartSettings(settings, vm::update, vm::resetHistory)
                             3 -> InputSettings(settings, state, vm::update, onInput)
-                            4 -> ToolSettings(settings, state, vm, onAbout)
+                            4 -> ToolSettings(settings, state, vm, onAbout, onNoiseGuide)
                         }
                     }
                 }

@@ -23,6 +23,7 @@ class SettingsActivity : ComponentActivity() {
                     ::finish,
                     { vm.selectInput(it) },
                     { startActivity(Intent(this, AboutActivity::class.java)) },
+                    { startActivity(Intent(this, NoiseGuideActivity::class.java)) },
                 )
             }
         }
