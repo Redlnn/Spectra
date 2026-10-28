@@ -36,7 +36,6 @@ data class AnalyzerSettings(
     val waveAutoScale: Boolean = true,
     val showPeakMarker: Boolean = true,
     val levelPositiveDb: Boolean = false,
-    val positiveDb: Boolean = false,
     val shape: WaveShape = WaveShape.SINE,
     val generatorHz: Double = 440.0,
     val generatorAmplitude: Double = .25,

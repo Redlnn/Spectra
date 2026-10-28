@@ -42,7 +42,6 @@ internal object SettingsJson {
                 put("waveAutoScale", settings.waveAutoScale)
                 put("showPeakMarker", settings.showPeakMarker)
                 put("levelPositiveDb", settings.levelPositiveDb)
-                put("positiveDb", settings.positiveDb)
                 put("shape", settings.shape.name)
                 put("generatorHz", settings.generatorHz)
                 put("generatorAmplitude", settings.generatorAmplitude)
@@ -118,7 +117,6 @@ internal object SettingsJson {
             waveAutoScale = b("waveAutoScale", d.waveAutoScale),
             showPeakMarker = b("showPeakMarker", d.showPeakMarker),
             levelPositiveDb = b("levelPositiveDb", d.levelPositiveDb),
-            positiveDb = b("positiveDb", d.positiveDb),
             shape = readEnum(j, "shape", d.shape),
             generatorHz = x("generatorHz", d.generatorHz).coerceIn(20.0, 20000.0),
             generatorAmplitude = x("generatorAmplitude", d.generatorAmplitude).coerceIn(.001, 1.0),

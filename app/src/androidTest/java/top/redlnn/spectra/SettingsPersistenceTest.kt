@@ -76,7 +76,6 @@ class SettingsPersistenceTest {
                 waveAutoScale = false,
                 showPeakMarker = false,
                 levelPositiveDb = true,
-                positiveDb = true,
                 shape = WaveShape.SAW,
                 generatorHz = 125.0,
                 generatorAmplitude = .1,

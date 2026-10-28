@@ -455,7 +455,7 @@ class AnalyzerChartView(context: Context) : View(context) {
             canvas.drawLine(rect.left, y, rect.right, y, paint)
             text(
                 canvas,
-                (db + if (settings.positiveDb) 100 else 0).roundToInt().toString(),
+                db.roundToInt().toString(),
                 rect.left - dp(8f),
                 y + dp(3f),
                 dim,
@@ -467,7 +467,7 @@ class AnalyzerChartView(context: Context) : View(context) {
         canvas.rotate(-90f, rect.left - dp(32f), rect.centerY())
         text(
             canvas,
-            if (settings.positiveDb) "+100" else "dBFS",
+            "dBFS",
             rect.left - dp(32f),
             rect.centerY(),
             dim,

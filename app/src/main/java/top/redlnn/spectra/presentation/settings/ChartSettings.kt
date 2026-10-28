@@ -18,9 +18,6 @@ internal fun ChartSettings(
         if (s.mapping == Mapping.BAND_POWER)
             SettingInfo("频带功率平均的定义", "按像素覆盖范围对 bin 功率加权平均；窄于一个 bin 时作功率插值。它不是 PSD，也不代表带内总功率。")
         SettingToggle("双线性纹理过滤", s.bilinear, "仅改变绘图，不提高 FFT 分辨率") { update(s.copy(bilinear = it)) }
-        SettingToggle("频谱 +100 显示偏移", s.positiveDb, "只改变纵轴标签；真实读数始终为 dBFS") {
-            update(s.copy(positiveDb = it))
-        }
     }
     SettingsSection("声谱图", "最新数据在底部 · 时间单位为秒") {
         SettingSlider(
