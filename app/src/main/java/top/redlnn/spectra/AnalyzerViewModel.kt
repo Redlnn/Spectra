@@ -201,22 +201,6 @@ class AnalyzerViewModel(application: Application) : AndroidViewModel(application
         mutableNotices.tryEmit("声谱图历史已清空")
     }
 
-    fun saveProfile() {
-        viewModelScope.launch {
-            store.saveProfile(settings.value)
-            mutableNotices.emit("预设已保存到本机")
-        }
-    }
-
-    fun loadProfile() {
-        viewModelScope.launch {
-            store.profile()?.let {
-                update(it)
-                mutableNotices.emit("已载入保存的预设")
-            } ?: mutableNotices.emit("还没有保存的预设")
-        }
-    }
-
     fun pcmSnapshot(): Pair<Int, FloatArray>? = recording?.let {
         state.value.actualRate to it.copy()
     }

@@ -14,9 +14,7 @@ internal fun ToolSettings(
     onAbout: () -> Unit,
 ) {
     val defaults = AnalyzerSettings()
-    SettingsSection("预设与性能") {
-        SettingAction("保存当前预设", "保存到本机", onClick = vm::saveProfile)
-        SettingAction("载入保存的预设", "恢复参数", onClick = vm::loadProfile)
+    SettingsSection("设置与性能") {
         SettingAction(
             "恢复默认设置",
             "FFT ${defaults.fftSize} · ${(defaults.overlap*100).roundToInt()}% 重叠 · 深色",
