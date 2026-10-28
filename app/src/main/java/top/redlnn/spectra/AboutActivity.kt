@@ -16,7 +16,7 @@ class AboutActivity : ComponentActivity() {
         val vm = (application as SpectraApplication).analyzer
         setContent {
             val settings by vm.settings.collectAsState()
-            SpectraTheme(settings) { AboutPage(::finish) }
+            SpectraTheme(settings) { AboutPage(settings.monet, ::finish) }
         }
     }
 }

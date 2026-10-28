@@ -550,7 +550,12 @@ private fun AnalyzerContent(
             modifier = Modifier.testTag("noise-reference-dialog"),
             title = { Text("噪声寻源") },
             text = {
-                NoiseReferenceCard(noiseReference, state.running, vm::restartNoiseObservation) {
+                NoiseReferenceCard(
+                    noiseReference,
+                    state.running,
+                    vm::restartNoiseObservation,
+                    showBackground = false,
+                ) {
                     noiseDetailsOpen = false
                     context.startActivity(Intent(context, NoiseGuideActivity::class.java))
                 }

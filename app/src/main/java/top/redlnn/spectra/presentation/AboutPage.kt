@@ -4,6 +4,7 @@ package top.redlnn.spectra.presentation
 
 import android.widget.Toast
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -36,7 +37,7 @@ private const val ProjectLicenseUrl = "https://www.gnu.org/licenses/agpl-3.0.htm
 private data class OpenSourceLink(val name: String, val license: String, val url: String)
 
 @Composable
-fun AboutPage(onBack: () -> Unit) {
+fun AboutPage(monet: Boolean, onBack: () -> Unit) {
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
     val projects =
@@ -92,7 +93,7 @@ fun AboutPage(onBack: () -> Unit) {
                     .padding(bottom = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                AboutBrand(Modifier.fillMaxWidth().heightIn(min = heroHeight))
+                AboutBrand(monet, Modifier.fillMaxWidth().heightIn(min = heroHeight))
                 Text(
                     "开放源代码许可",
                     style = MaterialTheme.typography.labelLarge,
@@ -172,20 +173,33 @@ fun AboutPage(onBack: () -> Unit) {
 }
 
 @Composable
-private fun AboutBrand(modifier: Modifier) {
+private fun AboutBrand(monet: Boolean, modifier: Modifier) {
+    val dark = LocalDarkMode.current
+    val colors = MaterialTheme.colorScheme
     Column(
         modifier.padding(vertical = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Image(
-            painter = painterResource(R.drawable.spectra_icon),
-            contentDescription = null,
-            modifier = Modifier.size(172.dp),
-            colorFilter =
-                if (LocalDarkMode.current) null
-                else ColorFilter.tint(MaterialTheme.colorScheme.primary),
-        )
+        Box(
+            Modifier.size(172.dp)
+                .then(
+                    if (dark) Modifier
+                    else
+                        Modifier.background(
+                            if (monet) colors.primaryContainer else Color(0xFF101F36),
+                            RoundedCornerShape(40.dp),
+                        )
+                )
+        ) {
+            Image(
+                painter = painterResource(R.drawable.spectra_icon),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                colorFilter = if (monet) ColorFilter.tint(colors.primary) else null,
+            )
+        }
+        if (!dark) Spacer(Modifier.height(12.dp))
         Text(
             "声镜",
             style = MaterialTheme.typography.displaySmall,

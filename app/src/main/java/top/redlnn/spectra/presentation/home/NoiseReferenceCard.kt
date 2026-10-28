@@ -7,6 +7,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -17,6 +18,7 @@ internal fun NoiseReferenceCard(
     reference: NoiseReference,
     running: Boolean,
     onRestart: () -> Unit,
+    showBackground: Boolean = true,
     onGuide: () -> Unit,
 ) {
     val advice =
@@ -25,12 +27,19 @@ internal fun NoiseReferenceCard(
         modifier = Modifier.fillMaxWidth().padding(top = 8.dp).testTag("noise-reference-card"),
         shape = RoundedCornerShape(20.dp),
         colors =
-            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+            CardDefaults.cardColors(
+                containerColor =
+                    if (showBackground) MaterialTheme.colorScheme.surfaceContainer
+                    else Color.Transparent
+            ),
     ) {
         Column(
             Modifier.heightIn(max = 240.dp)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 10.dp),
+                .padding(
+                    if (showBackground) PaddingValues(horizontal = 16.dp, vertical = 10.dp)
+                    else PaddingValues(0.dp)
+                ),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -44,14 +53,14 @@ internal fun NoiseReferenceCard(
                 TextButton(
                     onClick = onRestart,
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
-                    modifier = Modifier.heightIn(min = 48.dp).testTag("noise-restart"),
+                    modifier = Modifier.height(36.dp).testTag("noise-restart"),
                 ) {
                     Text("重新开始")
                 }
                 TextButton(
                     onClick = onGuide,
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
-                    modifier = Modifier.heightIn(min = 48.dp).testTag("noise-guide-link"),
+                    modifier = Modifier.height(36.dp).testTag("noise-guide-link"),
                 ) {
                     Text("寻源指南")
                 }
@@ -68,6 +77,7 @@ internal fun NoiseReferenceCard(
             )
             Text(
                 "下一步建议",
+                modifier = Modifier.padding(top = 4.dp),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.primary,
             )
