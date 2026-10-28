@@ -1,5 +1,6 @@
 package top.redlnn.spectra
 
+import android.content.res.Configuration
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.ui.test.*
@@ -90,7 +91,7 @@ class AnalyzerAppearanceTest {
     }
 
     @Test
-    fun compactCardsAlignFooterTextAndAutomaticLayoutUsesWidth() {
+    fun compactCardsAlignFooterText() {
         tone()
         val pitch = compose.onNodeWithTag("pitch-card").getUnclippedBoundsInRoot()
         val detail =
@@ -105,13 +106,40 @@ class AnalyzerAppearanceTest {
                     .getUnclippedBoundsInRoot()
             assertEquals(detail.bottom.value, unit.bottom.value, 1f)
         }
+    }
+
+    @Test
+    fun chartLayoutRequiresLandscapeAndEnoughWidth() {
         compose.runOnIdle {
-            val native = AnalyzerChartView(compose.activity)
-            val scale = compose.activity.resources.displayMetrics.density
-            native.layout(0, 0, (360 * scale).toInt(), (600 * scale).toInt())
-            assertFalse(native.horizontal)
-            native.layout(0, 0, (800 * scale).toInt(), (400 * scale).toInt())
-            assertTrue(native.horizontal)
+            for ((orientation, width, height, horizontal) in
+                listOf(
+                    LayoutCase(Configuration.ORIENTATION_PORTRAIT, 360, 600, false),
+                    LayoutCase(Configuration.ORIENTATION_PORTRAIT, 800, 1000, false),
+                    LayoutCase(Configuration.ORIENTATION_PORTRAIT, 800, 400, false),
+                    LayoutCase(Configuration.ORIENTATION_LANDSCAPE, 800, 400, true),
+                    LayoutCase(Configuration.ORIENTATION_LANDSCAPE, 1280, 800, true),
+                    LayoutCase(Configuration.ORIENTATION_LANDSCAPE, 560, 320, false),
+                )) {
+                val config =
+                    Configuration(compose.activity.resources.configuration).apply {
+                        this.orientation = orientation
+                    }
+                val native = AnalyzerChartView(compose.activity.createConfigurationContext(config))
+                val scale = native.resources.displayMetrics.density
+                native.layout(0, 0, (width * scale).toInt(), (height * scale).toInt())
+                assertEquals(
+                    "orientation=$orientation chart=${width}x$height",
+                    horizontal,
+                    native.horizontal,
+                )
+            }
         }
     }
+
+    private data class LayoutCase(
+        val orientation: Int,
+        val width: Int,
+        val height: Int,
+        val horizontal: Boolean,
+    )
 }

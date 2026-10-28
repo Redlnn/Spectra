@@ -1,6 +1,7 @@
 package top.redlnn.spectra.render
 
 import android.content.Context
+import android.content.res.Configuration
 import android.graphics.*
 import android.view.*
 import kotlin.math.*
@@ -15,7 +16,9 @@ class AnalyzerChartView(context: Context) : View(context) {
     var onSplitChanged: ((Float) -> Unit)? = null
     var colors = GraphColors()
     val horizontal: Boolean
-        get() = width / density >= 600f
+        get() =
+            resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE &&
+                width / density >= 600f
 
     var frameSource: (() -> AnalysisFrame?)? = null
     var onRenderRate: ((Double) -> Unit)? = null

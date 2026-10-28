@@ -24,9 +24,14 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import kotlinx.coroutines.*
 import top.redlnn.spectra.AnalyzerViewModel
 import top.redlnn.spectra.SettingsActivity
@@ -76,15 +81,39 @@ private fun AnalyzerContent(
     var fullscreen by rememberSaveable { mutableStateOf(false) }
     var generatorOpen by remember { mutableStateOf(false) }
     BackHandler(fullscreen) { fullscreen = false }
-    val compact =
-        with(LocalDensity.current) { LocalWindowInfo.current.containerSize.height.toDp() } < 480.dp
+    val windowSize = LocalWindowInfo.current.containerSize
+    val compact = with(LocalDensity.current) { windowSize.height.toDp() } < 480.dp
+    val wideLandscape =
+        with(LocalDensity.current) {
+            windowSize.width > windowSize.height && windowSize.width.toDp() >= 600.dp
+        }
+    val compactLandscape = wideLandscape && compact
+    val window = LocalActivity.current?.window
+    DisposableEffect(window, compactLandscape) {
+        if (window == null || !compactLandscape) return@DisposableEffect onDispose {}
+        val controller = WindowCompat.getInsetsController(window, window.decorView)
+        val statusBars = WindowInsetsCompat.Type.statusBars()
+        val wasVisible =
+            ViewCompat.getRootWindowInsets(window.decorView)?.isVisible(statusBars) ?: true
+        val previousBehavior = controller.systemBarsBehavior
+        controller.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        controller.hide(statusBars)
+        onDispose {
+            controller.systemBarsBehavior = previousBehavior
+            if (wasVisible) controller.show(statusBars)
+        }
+    }
     val graphColors = LocalGraphColors.current
     Surface(Modifier.fillMaxSize(), color = Base) {
         Box(Modifier.fillMaxSize()) {
             Column(
                 Modifier.fillMaxSize()
                     .safeDrawingPadding()
-                    .padding(horizontal = if (fullscreen) 6.dp else if (compact) 12.dp else 16.dp)
+                    .padding(
+                        if (fullscreen) PaddingValues(12.dp)
+                        else PaddingValues(horizontal = if (compact) 12.dp else 16.dp)
+                    )
             ) {
                 if (!fullscreen) {
                     Row(
@@ -98,14 +127,19 @@ private fun AnalyzerContent(
                         Spacer(Modifier.width(10.dp))
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.Center) {
                             Text(
-                                "声镜" +
-                                    if (compact && s.pitch)
-                                        " · ${frame?.pitch?.note(s.flats) ?: "—"}"
-                                    else "",
+                                if (wideLandscape) "声镜 · Spectra"
+                                else
+                                    "声镜" +
+                                        if (compact && s.pitch)
+                                            " · ${frame?.pitch?.note(s.flats) ?: "—"}"
+                                        else "",
                                 fontSize = if (compact) 20.sp else 24.sp,
                                 lineHeight = 26.sp,
                                 fontWeight = FontWeight.Bold,
-                                letterSpacing = 2.sp,
+                                letterSpacing = if (wideLandscape) 0.sp else 2.sp,
+                                maxLines = if (wideLandscape) 1 else Int.MAX_VALUE,
+                                overflow =
+                                    if (wideLandscape) TextOverflow.Ellipsis else TextOverflow.Clip,
                                 style =
                                     androidx.compose.ui.text.TextStyle(
                                         platformStyle =
@@ -114,7 +148,7 @@ private fun AnalyzerContent(
                                             )
                                     ),
                             )
-                            if (!compact)
+                            if (!compact && !wideLandscape)
                                 Text(
                                     "SPECTRA",
                                     fontSize = 8.sp,
@@ -165,7 +199,7 @@ private fun AnalyzerContent(
                         onClick = { inputOpen = true },
                         color = SurfaceColor,
                         shape = RoundedCornerShape(20.dp),
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().testTag("input-selector"),
                     ) {
                         Row(
                             Modifier.padding(
@@ -194,13 +228,29 @@ private fun AnalyzerContent(
                                         when (s.input) {
                                             InputSource.GENERATOR ->
                                                 "${s.shape.label} · ${s.generatorHz.coerceAtMost(state.actualRate * .45).toInt()} Hz · ${if(state.playbackActive) "播放中" else "已静音"}"
-                                            InputSource.MICROPHONE ->
-                                                "${state.actualRate} Hz"
+                                            InputSource.MICROPHONE -> "${state.actualRate} Hz"
                                         },
                                         color = Muted,
                                         fontSize = 11.sp,
                                     )
                             }
+                            if (compactLandscape && s.pitch)
+                                Text(
+                                    frame?.pitch?.note(s.flats) ?: "—",
+                                    modifier =
+                                        Modifier.padding(end = 16.dp).testTag("landscape-pitch"),
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Accent,
+                                    maxLines = 1,
+                                )
+                            if (compactLandscape && frame?.clipping == true)
+                                Text(
+                                    "削波",
+                                    modifier = Modifier.padding(end = 8.dp),
+                                    color = MaterialTheme.colorScheme.error,
+                                    fontSize = 10.sp,
+                                )
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Box(
                                     Modifier.size(6.dp)
@@ -235,69 +285,113 @@ private fun AnalyzerContent(
                             generatorOpen = true
                         }
                     Row(
-                        Modifier.fillMaxWidth()
-                            .horizontalScroll(rememberScrollState())
-                            .padding(vertical = if (compact) 0.dp else 3.dp),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        listOf(
-                                ViewMode.SPECTRUM_SPECTROGRAM,
-                                ViewMode.WAVE_SPECTRUM,
-                                ViewMode.WAVE_SPECTROGRAM,
-                                ViewMode.WAVE,
-                                ViewMode.SPECTRUM,
-                                ViewMode.SPECTROGRAM,
-                            )
-                            .forEach { view ->
-                                FilterChip(
-                                    s.view == view,
-                                    { vm.update(s.copy(view = view)) },
-                                    label = {
-                                        Text(
-                                            when (view) {
-                                                ViewMode.SPECTRUM_SPECTROGRAM -> "1D + 2D"
-                                                ViewMode.WAVE_SPECTRUM -> "W + 1D"
-                                                ViewMode.WAVE_SPECTROGRAM -> "W + 2D"
-                                                ViewMode.WAVE -> "W"
-                                                ViewMode.SPECTRUM -> "1D"
-                                                else -> "2D"
-                                            },
-                                            fontSize = 11.sp,
-                                        )
-                                    },
+                        Row(
+                            Modifier.weight(1f)
+                                .horizontalScroll(rememberScrollState())
+                                .padding(vertical = if (compact) 0.dp else 3.dp),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            listOf(
+                                    ViewMode.SPECTRUM_SPECTROGRAM,
+                                    ViewMode.WAVE_SPECTRUM,
+                                    ViewMode.WAVE_SPECTROGRAM,
+                                    ViewMode.WAVE,
+                                    ViewMode.SPECTRUM,
+                                    ViewMode.SPECTROGRAM,
                                 )
-                            }
+                                .forEach { view ->
+                                    FilterChip(
+                                        s.view == view,
+                                        { vm.update(s.copy(view = view)) },
+                                        label = {
+                                            Text(
+                                                when (view) {
+                                                    ViewMode.SPECTRUM_SPECTROGRAM -> "1D + 2D"
+                                                    ViewMode.WAVE_SPECTRUM -> "W + 1D"
+                                                    ViewMode.WAVE_SPECTROGRAM -> "W + 2D"
+                                                    ViewMode.WAVE -> "W"
+                                                    ViewMode.SPECTRUM -> "1D"
+                                                    else -> "2D"
+                                                },
+                                                fontSize = 11.sp,
+                                            )
+                                        },
+                                    )
+                                }
+                        }
+                        if (compactLandscape)
+                            AnalyzerDeviceStatus(Modifier.padding(start = 12.dp, end = 8.dp))
                     }
                 }
-                AndroidView(
-                    factory = { context ->
-                        AnalyzerChartView(context).also {
-                            chart = it
-                            onChart(it)
-                            it.history = vm.history
-                            it.frameSource = vm::chartFrame
-                            it.onRenderRate = vm::reportRenderRate
-                            it.onSplitChanged = { ratio ->
-                                vm.update(vm.settings.value.copy(split = ratio))
+                Row(
+                    Modifier.weight(1f)
+                        .fillMaxWidth()
+                        .padding(bottom = if (wideLandscape && !fullscreen) 12.dp else 0.dp)
+                        .testTag("chart-workspace")
+                ) {
+                    AndroidView(
+                        factory = { context ->
+                            AnalyzerChartView(context).also {
+                                chart = it
+                                onChart(it)
+                                it.history = vm.history
+                                it.frameSource = vm::chartFrame
+                                it.onRenderRate = vm::reportRenderRate
+                                it.onSplitChanged = { ratio ->
+                                    vm.update(vm.settings.value.copy(split = ratio))
+                                }
+                            }
+                        },
+                        modifier = Modifier.weight(1f).fillMaxHeight().testTag("analyzer-chart"),
+                        update = { view ->
+                            val changed = view.settings != s || view.colors != graphColors
+                            view.settings = s
+                            view.colors = graphColors
+                            view.frame = frame
+                            view.history = vm.history
+                            view.running = state.running
+                            view.tag = historyRevision
+                            if (!state.running || changed) view.invalidate()
+                        },
+                    )
+                    if (compactLandscape && !fullscreen)
+                        Column(
+                            Modifier.width(48.dp)
+                                .fillMaxHeight()
+                                .verticalScroll(rememberScrollState())
+                                .testTag("landscape-chart-actions"),
+                            verticalArrangement =
+                                Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            if (1 in s.view.panels)
+                                IconButton(
+                                    onClick = vm::resetPeaks,
+                                    modifier = Modifier.testTag("reset-spectrum-peaks"),
+                                ) {
+                                    Icon(Icons.Rounded.Refresh, "重置峰值", tint = Accent)
+                                }
+                            IconButton(
+                                onClick = {
+                                    chart?.resetViewport()
+                                    Toast.makeText(context, "已重置图表缩放与光标", Toast.LENGTH_SHORT).show()
+                                },
+                                modifier = Modifier.testTag("reset-viewport"),
+                            ) {
+                                Icon(Icons.Rounded.RestartAlt, "重置缩放", tint = Accent)
+                            }
+                            IconButton(onClick = { fullscreen = true }) {
+                                Icon(Icons.Rounded.Fullscreen, "图表全屏", tint = Accent)
                             }
                         }
-                    },
-                    modifier = Modifier.weight(1f).fillMaxWidth().testTag("analyzer-chart"),
-                    update = { view ->
-                        val changed = view.settings != s || view.colors != graphColors
-                        view.settings = s
-                        view.colors = graphColors
-                        view.frame = frame
-                        view.history = vm.history
-                        view.running = state.running
-                        view.tag = historyRevision
-                        if (!state.running || changed) view.invalidate()
-                    },
-                )
-                if (!fullscreen)
+                }
+                if (!fullscreen && !compactLandscape)
                     Row(
-                        Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                        Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("chart-footer"),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
