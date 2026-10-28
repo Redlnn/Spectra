@@ -11,7 +11,7 @@ internal fun ChartSettings(
     resetHistory: () -> Unit,
 ) {
     SettingsSection("频率轴与纹理") {
-        SettingToggle("对数刻度", s.logAxis, "关闭后使用线性刻度；图表和光标共享坐标") { update(s.copy(logAxis = it)) }
+        SettingToggle("对数刻度", s.logAxis) { update(s.copy(logAxis = it)) }
         SettingChoice("频率重采样", s.mapping, Mapping.entries, label = { it.label }) {
             update(s.copy(mapping = it))
         }
@@ -19,7 +19,7 @@ internal fun ChartSettings(
             SettingInfo("频带功率平均的定义", "按像素覆盖范围对 bin 功率加权平均；窄于一个 bin 时作功率插值。它不是 PSD，也不代表带内总功率。")
         SettingToggle("双线性纹理过滤", s.bilinear, "仅改变绘图，不提高 FFT 分辨率") { update(s.copy(bilinear = it)) }
     }
-    SettingsSection("声谱图", "最新数据在底部 · 时间单位为秒") {
+    SettingsSection("声谱图") {
         SettingSlider(
             "历史长度",
             { "${it.roundToInt()} s" },

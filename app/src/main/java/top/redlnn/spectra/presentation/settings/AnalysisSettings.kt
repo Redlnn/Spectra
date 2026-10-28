@@ -11,7 +11,7 @@ internal fun AnalysisSettings(
     update: (AnalyzerSettings) -> Unit,
     resetPeaks: () -> Unit,
 ) {
-    SettingsSection("FFT 与时间窗", "参数改变会重建分析和历史") {
+    SettingsSection("FFT 与时间窗") {
         SettingChoice("分析引擎", s.engine, Engine.entries, label = { it.label }) { engine ->
             update(
                 s.copy(

@@ -12,7 +12,7 @@ internal fun InputSettings(
     update: (AnalyzerSettings) -> Unit,
     onInput: (InputSource) -> Unit,
 ) {
-    SettingsSection("音频输入", "所有分析在设备本地完成") {
+    SettingsSection("音频输入") {
         SettingChoice(
             "输入来源",
             s.input,
@@ -31,7 +31,7 @@ internal fun InputSettings(
         SettingInfo("实际输入", "${state.actualRate} Hz\n${state.message}")
         SettingToggle("启动时开始分析", s.startOn) { update(s.copy(startOn = it)) }
     }
-    SettingsSection("信号发生器", "选为输入后实时分析；播放使用系统媒体音量") {
+    SettingsSection("信号发生器") {
         SettingToggle("播放发生器声音", s.generatorPlayback, "仅在测试信号输入时播放；暂停或离开前台即停止") {
             update(s.copy(generatorPlayback = it))
         }

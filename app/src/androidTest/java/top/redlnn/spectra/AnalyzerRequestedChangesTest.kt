@@ -207,11 +207,11 @@ class AnalyzerRequestedChangesTest {
         compose.onNodeWithContentDescription("设置").performClick()
         compose.waitForSettingsScreen()
         compose.onNodeWithText("工具", useUnmergedTree = true).performClick()
-        compose.onNodeWithText("界面刷新率").performScrollTo().performClick()
+        compose.onNodeWithText("数据刷新率").performScrollTo().performClick()
         RefreshRates.forEachIndexed { index, rate ->
-            compose.onNodeWithTag("picker-option-界面刷新率-$index").assertTextContains("$rate FPS")
+            compose.onNodeWithTag("picker-option-数据刷新率-$index").assertTextContains("$rate FPS")
         }
-        compose.onNodeWithTag("picker-option-界面刷新率-3").performClick()
+        compose.onNodeWithTag("picker-option-数据刷新率-3").performClick()
         compose.runOnUiThread { assertEquals(40, vm.settings.value.fps) }
         compose.onNodeWithContentDescription("关闭设置").performClick()
     }

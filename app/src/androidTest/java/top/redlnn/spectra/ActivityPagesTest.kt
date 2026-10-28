@@ -74,7 +74,7 @@ class ActivityPagesTest {
         compose.onNodeWithText("16384", useUnmergedTree = true).performClick()
         assertEquals(16384, vm.settings.value.fftSize)
         compose.onNodeWithText("工具", useUnmergedTree = true).performClick()
-        compose.onNodeWithText("关于声镜").performScrollTo().performClick()
+        compose.onNodeWithText("关于").performScrollTo().performClick()
         compose.waitUntil(5000) { resumed() == AboutActivity::class.java }
         compose.onNodeWithText("关于").assertDoesNotExist()
         compose

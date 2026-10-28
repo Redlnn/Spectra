@@ -23,7 +23,7 @@ internal fun AppearanceSettings(s: AnalyzerSettings, update: (AnalyzerSettings) 
         SettingToggle(
             "Monet 取色",
             s.monet,
-            if (Build.VERSION.SDK_INT >= 31) "使用 Miuix 系统动态配色；锁定频谱和波形配色，声谱图仍可独立选择"
+            if (Build.VERSION.SDK_INT >= 31) "可用时使用系统动态取色"
             else "系统动态取色需要 Android 12 或更高版本",
             enabled = Build.VERSION.SDK_INT >= 31,
         ) {
@@ -57,7 +57,7 @@ internal fun AppearanceSettings(s: AnalyzerSettings, update: (AnalyzerSettings) 
             update(s.copy(colorMap = it))
         }
     }
-    SettingsSection("视图与音高", "窄屏上下排列，宽屏左右排列；分隔条可拖动") {
+    SettingsSection("视图与音高") {
         SettingChoice("显示视图", s.view, ViewMode.entries, label = { it.label }) {
             update(s.copy(view = it))
         }
@@ -70,7 +70,7 @@ internal fun AppearanceSettings(s: AnalyzerSettings, update: (AnalyzerSettings) 
         }
         SettingInfo(
             "音高识别",
-            "音高估计基频，峰值频率表示频谱最强分量；谐波较强时两者可相差八度。不同估计方法、检测窗口与整数取整会产生小幅差异，440 与 441 Hz 约相差 4 音分。适合 50–2000 Hz 持续单音。",
+            "音高估计基频，峰值频率表示频谱最强分量；谐波较强时两者可相差八度。不同估计方法、检测窗口与整数取整会产生小幅差异，440 与 441 Hz 约相差 4 音分。",
         )
         SettingToggle("音名使用降号 ♭", s.flats, "关闭后使用升号 ♯") { update(s.copy(flats = it)) }
     }

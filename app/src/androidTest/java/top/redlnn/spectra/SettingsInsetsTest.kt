@@ -53,9 +53,9 @@ class SettingsInsetsTest {
             1f,
         )
         compose.onNodeWithText("工具", useUnmergedTree = true).performClick()
-        compose.onNodeWithText("关于声镜").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("关于").performScrollTo().assertIsDisplayed()
         compose.onNodeWithTag("settings-pager").performTouchInput { swipeUp() }
-        val lastAction = compose.onNodeWithText("关于声镜").fetchSemanticsNode().boundsInWindow
+        val lastAction = compose.onNodeWithText("关于").fetchSemanticsNode().boundsInWindow
         assertTrue(
             "The last action must remain above the navigation area",
             lastAction.bottom <= windowHeight - navigationHeight,

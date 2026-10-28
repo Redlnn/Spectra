@@ -33,18 +33,20 @@ internal val LocalSettingsMiuix = staticCompositionLocalOf { true }
 
 @Composable
 internal fun SettingsSection(
-    title: String,
+    title: String? = null,
     subtitle: String? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
-        Text(
-            title,
-            Modifier.padding(start = 4.dp, top = 8.dp),
-            fontSize = 13.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.primary,
-        )
+        title?.let {
+            Text(
+                it,
+                Modifier.padding(start = 4.dp, top = 8.dp),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
         subtitle?.let {
             Text(
                 it,

@@ -158,7 +158,7 @@ fun AboutPage(onBack: () -> Unit) {
                     onClick = { openLink(ProjectLicenseUrl) },
                     modifier = Modifier.padding(top = 16.dp).testTag("project-license"),
                 ) {
-                    Text("AGPL-3.0 开源许可")
+                    Text("本应用使用 AGPL-3.0 开源许可")
                     Spacer(Modifier.width(6.dp))
                     Icon(
                         Icons.Rounded.OpenInNew,

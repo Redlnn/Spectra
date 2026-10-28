@@ -193,9 +193,9 @@ private fun AnalyzerContent(
                                     Text(
                                         when (s.input) {
                                             InputSource.GENERATOR ->
-                                                "${s.shape.label} · ${s.generatorHz.coerceAtMost(state.actualRate * .45).toInt()} Hz · ${if(state.playbackActive) "播放中" else "仅分析"}"
+                                                "${s.shape.label} · ${s.generatorHz.coerceAtMost(state.actualRate * .45).toInt()} Hz · ${if(state.playbackActive) "播放中" else "已静音"}"
                                             InputSource.MICROPHONE ->
-                                                "${state.actualRate} Hz · 单声道 · 本地分析"
+                                                "${state.actualRate} Hz"
                                         },
                                         color = Muted,
                                         fontSize = 11.sp,
